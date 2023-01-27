@@ -22,5 +22,8 @@
     "knex-postgis": "^0.14.3",
     "node-geocoder": "^4.2.0",
     "pg": "^8.8.0"
+  },
+  "engines": {
+    "node": "16.17.1"
   }
 }

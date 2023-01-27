@@ -25,10 +25,16 @@ const censusVars = [
 
 module.exports.queryPop = async function (idParam) {
   try {
-    const query = await knex.select(censusVars).from('app_results_fl_2020').where({
+    const threeMile = await knex.select(censusVars).from('three_m_app_results_2020').where({
       id: idParam
     });
-    return query;
+    const fiveMile = await knex.select(censusVars).from('five_m_app_results_2020').where({
+      id: idParam
+    });
+    const tenMile = await knex.select(censusVars).from('ten_m_app_results_2020').where({
+      id: idParam
+    });
+    return [threeMile, fiveMile, tenMile];
   } catch (err) {
     console.log(err.stack);
   };

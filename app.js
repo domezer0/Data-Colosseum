@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
@@ -13,54 +14,39 @@ const logoutController = require('./controllers/logoutController');
 const sidebarAddress = require('./apis/sidebarAddress');
 
 //Queries for Dashboard
-const housingQuery = require('./apis/dashControllers/housingQuery')
-const popQuery = require('./apis/dashControllers/populationQuery')
+const housingQuery = require('./apis/dashControllers/housingQuery');
+const populationQuery = require('./apis/dashControllers/populationQuery');
+const incomeQuery = require('./apis/dashControllers/incomeQuery');
+const overviewQuery = require('./apis/dashControllers/overviewQuery');
 
-// const verifyJWT = require('./middleware/verifyJWT');
+const verifyJWT = require('./middleware/verifyJWT');
 const bodyParser = require('body-parser');
-
 const cookieParser = require('cookie-parser');
 const { verify } = require('crypto');
 const cors = require('cors');
 const cloudinary = require('cloudinary');
-
-// var whitelist = ['http://localhost:3000']
-// var corsOptions = {
-//   origin: function (origin, callback) {
-//     if (whitelist.indexOf(origin) !== -1) {
-//       callback(null, true)
-//     } else {
-//       callback(new Error('Not allowed by CORS'))
-//     }
-//   }
-// }
-
-cloudinary.config({
-  cloud_name: 'djlalgsmk',
-  api_key: '386655761436352',
-  api_secret: 'Ous8jCUrug-uZH7OVLRfkZCKARk'
-});
-
-require('dotenv').config();
-
-
+const corsOptions = require('./config/corsOptions');
+const credentials = require('./controllers/credentials')
 
 const app = express();
-app.options('*', cors());
-app.use(cors());
+app.use(credentials);
+
+
+
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(cookieParser());
-// app.use(cookieSession({
-//   name: 'session',
-//   maxAge: 24 * 60 * 60 * 1000,
-//   keys: [config.COOKIE_KEY_A, config.COOKIE_KEY_B],
-// }));
 app.use(express.json());
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-//Routes
+// cloudinary.config({
+//   cloud_name: 'djlalgsmk',
+//   api_key: '386655761436352',
+//   api_secret: 'Ous8jCUrug-uZH7OVLRfkZCKARk'
+// });
+
 
 //Recieve user registration data from react
 app.post('/register', registerController.handleNewUser);
@@ -70,14 +56,6 @@ app.post('/signin', authController.handleLogin);
 app.get('/refresh', refreshTokenController.handleRefreshToken);
 
 app.get('/logout', logoutController.handleLogout);
-
-//sends dashboard data for specific dash id to react
-// app.get('/data/:id', (req, res) => {
-//   const queryParam = parseInt(req.params.id)
-//   buildDashPage.query(queryParam).then((result) => {
-//     res.json(result);
-//   });
-// });
 
 //sends homepage data to react
 app.get('/properties', (req, res) => {
@@ -104,14 +82,14 @@ app.post('/posts', (req, res) => {
 
 app.get('/overview/:id', (req, res) => {
   const queryParam = parseInt(req.params.id);
-  popQuery.queryPop(queryParam).then((result) => {
+  overviewQuery.queryOverview(queryParam).then((result) => {
     res.json(result);
   });
 });
 
 app.get('/population/:id', (req, res) => {
   const queryParam = parseInt(req.params.id);
-  popQuery.queryPop(queryParam).then((result) => {
+  populationQuery.queryPop(queryParam).then((result) => {
     res.json(result);
   });
 });
@@ -125,24 +103,19 @@ app.get('/housing/:id', (req, res) => {
 
 app.get('/income/:id', (req, res) => {
   const queryParam = parseInt(req.params.id);
-  popQuery.queryPop(queryParam).then((result) => {
-    res.json(result);
-  });
-});
-
-app.get('/education+employement/:id', (req, res) => {
-  const queryParam = parseInt(req.params.id);
-  popQuery.queryPop(queryParam).then((result) => {
+  incomeQuery.queryIncome(queryParam).then((result) => {
     res.json(result);
   });
 });
 
 app.get('/listing/:id', (req, res) => {
   const queryParam = parseInt(req.params.id);
-  popQuery.queryPop(queryParam).then((result) => {
+  populationQuery.queryPop(queryParam).then((result) => {
     res.json(result);
   });
 });
+
+app.use(verifyJWT);
 
 const PORT = process.env.PORT || 5000;
 

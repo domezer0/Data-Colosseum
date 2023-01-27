@@ -6,7 +6,7 @@ const knex = require('../config/pgConn');
 const handleLogin = async (req, res) => {
   console.log(req.body);
   const { user, pwd } = req.body;
-  if (!user || !pwd) return res.sendStatus(400);
+  if (!user || !pwd) return res.sendStatus(400).json({ 'message': 'Username and password are required.' });
 
   const foundUser = await knex.select('*').from('users').where('name', user);
 
@@ -17,10 +17,16 @@ const handleLogin = async (req, res) => {
 
   const match = await bcrypt.compare(pwd, foundUser[0].password);
   if (match) {
+    const roles = foundUser[0].roles
     const accessToken = jwt.sign(
-      { "username": foundUser[0].name },
+      {
+        "UserInfo": {
+            "username": foundUser.username,
+            "roles": roles
+        }
+      },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: '30s' }
     );
     const refreshToken = jwt.sign(
       { "username": foundUser[0].name },
@@ -30,8 +36,8 @@ const handleLogin = async (req, res) => {
     const update = await knex('users').where('name', user).update('refresh_token', refreshToken)
     console.log(`User ${user} Logged In!`);
 
-    res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000});
-    res.json({ accessToken });
+    res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'Strict', maxAge: 24 * 60 * 60 * 1000});
+    res.json({ accessToken, roles });
   } else {
     return res.sendStatus(401)
   };
